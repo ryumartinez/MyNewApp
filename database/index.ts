@@ -23,7 +23,7 @@ export async function setupDatabase(): Promise<Database> {
 
     // Download from your .NET Seed Endpoint directly to the file reference
     await File.downloadFileAsync(
-      'https://your-api.com/api/sync/seed-db',
+      'http://localhost:5117/api/sync/seed-db',
       dbFile
     );
   }
