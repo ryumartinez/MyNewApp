@@ -1,40 +1,38 @@
-// Example for Expo Router _layout.tsx
-import { useEffect, useState } from 'react';
-import { View, Text, Button } from 'react-native';
-import { initDB } from '@/database';
-import {Stack} from "expo-router";
+import { useEffect, useState, Suspense } from 'react';
+import { ActivityIndicator, View, Text } from 'react-native';
+import { Stack } from "expo-router";
+import { SQLiteProvider } from 'expo-sqlite';
+import { DatabaseProvider } from '@nozbe/watermelondb/react';
+import { database, initDB } from '@/database'; // Import initDB here
 
 export default function RootLayout() {
-  const [isReady, setIsReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const startApp = async () => {
-    try {
-      setError(null);
-      await initDB();
-      setIsReady(true);
-    } catch (e: any) {
-      setError(e.message);
-    }
-  };
+  const [dbReady, setDbReady] = useState(false);
 
   useEffect(() => {
-    startApp();
+    // Initialize WatermelonDB manually
+    initDB().then(() => setDbReady(true));
   }, []);
 
-  if (error) {
+  // Wait for the 'let database' variable to be populated
+  if (!dbReady || !database) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'red' }}>Database Error</Text>
-        <Text style={{ textAlign: 'center', marginVertical: 10 }}>{error}</Text>
-        <Button title="Try Again" onPress={startApp} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+        <Text>Initializing Databases...</Text>
       </View>
     );
   }
 
-  if (!isReady) {
-    return <Text>Loading 100,000 Products...</Text>; // Your Splash Screen
-  }
-
-  return <Stack />; // Or your normal app entry
+  return (
+    <DatabaseProvider database={database}>
+      <Suspense fallback={<ActivityIndicator />}>
+        <SQLiteProvider
+          databaseName="watermelon.db"
+          assetSource={{ assetId: require('../assets/watermelon.db') }}
+        >
+          <Stack />
+        </SQLiteProvider>
+      </Suspense>
+    </DatabaseProvider>
+  );
 }
