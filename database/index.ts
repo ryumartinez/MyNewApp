@@ -1,7 +1,7 @@
 import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
-import { mySchema } from '@/model/schema';
-import Product from '../model/product';
+import Product from "@/database/product";
+import {mySchema} from "@/database/schema";
 
 // 1. Create the adapter
 const adapter = new SQLiteAdapter({
