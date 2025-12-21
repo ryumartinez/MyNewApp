@@ -6,14 +6,6 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Database Benchmarks</Text>
 
-      {/* Button for SQLite */}
-      <Link href="/expo-test" asChild>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>🚀 Test Raw expo-sqlite</Text>
-        </Pressable>
-      </Link>
-
-      {/* Button for WatermelonDB */}
       <Link href="/turbo-login-test" asChild>
         <Pressable style={[styles.button, styles.watermelonBtn]}>
           <Text style={styles.buttonText}>🍉 Test WatermelonDB</Text>
