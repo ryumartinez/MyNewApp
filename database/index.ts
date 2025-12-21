@@ -2,10 +2,12 @@ import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 import Product from "@/database/product";
 import {mySchema} from "@/database/schema";
+import migrations from "@/database/migrations";
 
 // 1. Create the adapter
 const adapter = new SQLiteAdapter({
   schema: mySchema,
+  migrations,
   jsi: true,            // High performance mode
   dbName: 'watermelon', // This creates 'watermelon.db'
 });
