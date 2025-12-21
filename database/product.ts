@@ -1,12 +1,13 @@
-import { Model } from '@nozbe/watermelondb'
-import { field, date, readonly } from '@nozbe/watermelondb/decorators'
+import { Model } from '@nozbe/watermelondb';
+import { field, text } from '@nozbe/watermelondb/decorators';
 
 export default class Product extends Model {
-  static table = 'products'
+  static table = 'products';
+
   // @ts-ignore
-  @field('name') name: string
+  @text('name') name; // Trims whitespace automatically
   // @ts-ignore
-  @field('price') price: string
+  @field('price') price; // Guaranteed to be a number by the schema [cite: 401]
   // @ts-ignore
-  @field('sku') sku: string
+  @text('sku') sku;
 }

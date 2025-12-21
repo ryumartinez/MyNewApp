@@ -1,13 +1,15 @@
-import { synchronize } from '@nozbe/watermelondb/sync'
-import { database } from './index'
+import { synchronize } from '@nozbe/watermelondb/sync';
+import { database } from './index';
 
 export async function pullAndPush() {
   await synchronize({
     database,
     pullChanges: async ({ lastPulledAt, schemaVersion, migration }) => {
+      // lastPulledAt is null on the very first sync [cite: 1478, 1752]
       const isFirstSync = lastPulledAt === null || lastPulledAt === 0;
       const useTurbo = isFirstSync;
 
+      // Passing params to your C# GetPullChangesAsync method
       const urlParams = `last_pulled_at=${lastPulledAt ?? 0}&schema_version=${schemaVersion}&turbo=${useTurbo}`;
       const response = await fetch(`http://10.0.2.2:5117/api/sync/pull?${urlParams}`);
 
@@ -16,7 +18,7 @@ export async function pullAndPush() {
       }
 
       if (useTurbo) {
-
+        // Turbo mode requires the raw response text [cite: 1556, 1566]
         const json = await response.text();
         return { syncJson: json };
       } else {
@@ -25,12 +27,23 @@ export async function pullAndPush() {
       }
     },
     pushChanges: async ({ changes, lastPulledAt }) => {
-      await fetch(`http://10.0.2.2:5117/api/sync/push?last_pulled_at=${lastPulledAt}`, {
+      // FIX: last_pulled_at must be in the BODY to match your C# SyncPushRequest record
+      const response = await fetch(`http://10.0.2.2:5117/api/sync/push`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ changes }),
+        body: JSON.stringify({
+          changes,
+          last_pulled_at: lastPulledAt // Aligning with your backend property name
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
     },
+    // Turbo Login requires JSI to be enabled [cite: 1543]
     unsafeTurbo: true,
+    // FIX: Your backend sends existing records in the 'created' list; this flag prevents errors
+    sendCreatedAsUpdated: true,
   });
 }

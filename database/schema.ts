@@ -7,7 +7,7 @@ export const mySchema = appSchema({
       name: 'products',
       columns: [
         { name: 'name', type: 'string' },
-        { name: 'price', type: 'string' }, // Changed to string to match your SQL 'TEXT' type
+        { name: 'price', type: 'number' }, // Changed to string to match your SQL 'TEXT' type
         { name: 'sku', type: 'string' }
       ],
     }),
