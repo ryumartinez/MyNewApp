@@ -5,9 +5,9 @@ export default class Product extends Model {
   static table = 'products';
 
   // @ts-ignore
-  @text('name') name; // Trims whitespace automatically
+  @text('name') name!: string;
   // @ts-ignore
-  @field('price') price; // Guaranteed to be a number by the schema [cite: 401]
+  @field('price') price!: number;
   // @ts-ignore
-  @text('sku') sku;
+  @text('sku') sku!: string;
 }

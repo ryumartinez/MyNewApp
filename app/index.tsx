@@ -1,24 +1,134 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { Link } from 'expo-router';
 
+/**
+ * HomeScreen for a reactive database benchmark app[cite: 8].
+ * Features navigation to sync tests and product lists.
+ */
 export default function HomeScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Database Benchmarks</Text>
+      <View style={styles.header}>
+        <Text style={styles.emoji}>🍉</Text>
+        <Text style={styles.title}>WatermelonDB</Text>
+        <Text style={styles.subtitle}>Performance Benchmarks</Text>
+      </View>
 
-      <Link href="/turbo-login-test" asChild>
-        <Pressable style={[styles.button, styles.watermelonBtn]}>
-          <Text style={styles.buttonText}>🍉 Test WatermelonDB</Text>
-        </Pressable>
-      </Link>
+      <View style={styles.buttonContainer}>
+        <Link href="/turbo-login-test" asChild>
+          <Pressable style={styles.button}>
+            <View style={[styles.iconCircle, { backgroundColor: '#FFEDEB' }]}>
+              <Text style={styles.buttonIcon}>⚡</Text>
+            </View>
+            <View style={styles.buttonTextContainer}>
+              <Text style={styles.buttonTitle}>Turbo Login Test</Text>
+              <Text style={styles.buttonDesc}>Test initial sync speed</Text>
+            </View>
+          </Pressable>
+        </Link>
+
+        <Link href="/product-list" asChild>
+          <Pressable style={styles.button}>
+            <View style={[styles.iconCircle, { backgroundColor: '#E8F5E9' }]}>
+              <Text style={styles.buttonIcon}>📦</Text>
+            </View>
+            <View style={styles.buttonTextContainer}>
+              <Text style={styles.buttonTitle}>Product List</Text>
+              <Text style={styles.buttonDesc}>View reactive collections</Text>
+            </View>
+          </Pressable>
+        </Link>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>Powered by WatermelonDB [cite: 12]</Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 30, textAlign: 'center' },
-  button: { backgroundColor: '#007AFF', padding: 15, borderRadius: 10, marginVertical: 10 },
-  watermelonBtn: { backgroundColor: '#FF4500' }, // Orange color to distinguish
-  buttonText: { color: 'white', textAlign: 'center', fontSize: 18, fontWeight: '600' }
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
+    paddingVertical: 60,
+  },
+  header: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  emoji: {
+    fontSize: 64,
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#1A1A1A',
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6C757D',
+    marginTop: 4,
+  },
+  buttonContainer: {
+    gap: 16,
+    width: '100%',
+  },
+  button: {
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    borderRadius: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  iconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  buttonIcon: {
+    fontSize: 24,
+  },
+  buttonTextContainer: {
+    flex: 1,
+  },
+  buttonTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1A1A1A',
+  },
+  buttonDesc: {
+    fontSize: 14,
+    color: '#6C757D',
+    marginTop: 2,
+  },
+  footer: {
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#ADB5BD',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
 });

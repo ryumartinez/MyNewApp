@@ -1,49 +1,39 @@
-import { synchronize } from '@nozbe/watermelondb/sync';
+import { synchronize, SyncPullArgs, SyncPushArgs } from '@nozbe/watermelondb/sync';
 import { database } from './index';
 
-export async function pullAndPush() {
+export async function pullAndPush(): Promise<void> {
   await synchronize({
     database,
-    pullChanges: async ({ lastPulledAt, schemaVersion, migration }) => {
-      // lastPulledAt is null on the very first sync [cite: 1478, 1752]
+    pullChanges: async ({ lastPulledAt, schemaVersion }: SyncPullArgs) => {
       const isFirstSync = lastPulledAt === null || lastPulledAt === 0;
-      const useTurbo = isFirstSync;
+      const url = `http://10.0.2.2:5117/api/sync/pull?last_pulled_at=${lastPulledAt ?? 0}&turbo=${isFirstSync}`;
 
-      // Passing params to your C# GetPullChangesAsync method
-      const urlParams = `last_pulled_at=${lastPulledAt ?? 0}&schema_version=${schemaVersion}&turbo=${useTurbo}`;
-      const response = await fetch(`http://10.0.2.2:5117/api/sync/pull?${urlParams}`);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(await response.text());
 
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      if (useTurbo) {
-        // Turbo mode requires the raw response text [cite: 1556, 1566]
+      if (isFirstSync) {
         const json = await response.text();
-        return { syncJson: json };
+        return { syncJson: json }; // Turbo mode requires raw text [cite: 1556]
       } else {
         const { changes, timestamp } = await response.json();
+
+        // MANUAL DEBUG: Check for missing IDs which cause "Failed to get ID"
+        if (__DEV__ && changes.products) {
+          const all = [...changes.products.created, ...changes.products.updated];
+          all.forEach((r, i) => { if (!r.id) console.error(`Product ${i} missing ID!`, r); });
+        }
+
         return { changes, timestamp };
       }
     },
-    pushChanges: async ({ changes, lastPulledAt }) => {
-      // FIX: last_pulled_at must be in the BODY to match your C# SyncPushRequest record
-      const response = await fetch(`http://10.0.2.2:5117/api/sync/push`, {
+    pushChanges: async ({ changes, lastPulledAt }: SyncPushArgs) => {
+      await fetch(`http://10.0.2.2:5117/api/sync/push`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          changes,
-          last_pulled_at: lastPulledAt // Aligning with your backend property name
-        }),
+        body: JSON.stringify({ changes, last_pulled_at: lastPulledAt }), // Match C# property name
       });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
     },
-    // Turbo Login requires JSI to be enabled [cite: 1543]
-    unsafeTurbo: true,
-    // FIX: Your backend sends existing records in the 'created' list; this flag prevents errors
-    sendCreatedAsUpdated: true,
+    unsafeTurbo: true, // Requires JSI [cite: 1543]
+    sendCreatedAsUpdated: true, // Handles existing records sent as "created" [cite: 1672]
   });
 }
