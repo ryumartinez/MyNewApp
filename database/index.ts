@@ -1,69 +1,84 @@
 import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 import { Directory, File, Paths } from 'expo-file-system';
+import { Asset } from 'expo-asset';
+import * as SQLite from 'expo-sqlite';
+
 import { mySchema } from '@/model/schema';
 import Product from '../model/product';
 
 const DB_NAME = 'watermelon.db';
-const SEED_ENDPOINT = 'http://10.0.2.2:5117/api/sync/seed-db';
 
-// Helper to format bytes for the log
-const formatBytes = (bytes: number) => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const dm = 2;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-};
+/**
+ * Diagnostic function to verify the bundled asset's structure
+ */
+async function inspectDatabase(dbFileName: string) {
+  try {
+    const db = await SQLite.openDatabaseAsync(dbFileName);
+    const tables = await db.getAllAsync<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type='table';"
+    );
+    const tableNames = tables.map((t) => t.name);
+
+    console.log('--- [DEBUG] ASSET INSPECTION ---');
+    console.log(`Tables in bundled file: ${tableNames.join(', ')}`);
+
+    if (tableNames.includes('products')) {
+      const result = await db.getFirstAsync<{ count: number }>(
+        `SELECT COUNT(*) as count FROM products`
+      );
+      console.log(`Table 'products' contains: ${result?.count} pre-baked rows.`);
+    }
+    await db.closeAsync();
+  } catch (error) {
+    console.error('[DB DEBUG] Inspection Error:', error);
+  }
+}
 
 export async function setupDatabase(): Promise<Database> {
   const sqliteDir = new Directory(Paths.document, 'SQLite');
   const dbFile = new File(sqliteDir, DB_NAME);
 
-  // 1. Initial Seeding Logic
+  // 1. Prepopulation Logic: Copy from Assets if it doesn't exist on disk
   if (!dbFile.exists) {
-    console.log(`[DB] Attempting initial seed from: ${SEED_ENDPOINT}`);
-
     try {
-      if (!sqliteDir.exists) {
-        sqliteDir.create();
+      console.log(`[DB] First launch: Prepopulating from local assets...`);
+
+      if (!sqliteDir.exists) sqliteDir.create();
+
+      // Load the file from your project's assets folder
+      // Make sure the file is actually at ./assets/watermelon.db
+      const asset = Asset.fromModule(require('@/assets/watermelon.db'));
+      await asset.downloadAsync();
+
+      if (!asset.localUri) {
+        throw new Error("Failed to get local URI for bundled database asset.");
       }
 
-      const result = await File.downloadFileAsync(SEED_ENDPOINT, dbFile);
+      // Copy the asset to the app's internal SQLite directory
+      const assetFile = new File(asset.localUri);
+      await assetFile.copy(dbFile);
 
-      // Verify file exists and log its details
-      if (!dbFile.exists) {
-        throw new Error("Download completed but file was not saved to disk.");
-      }
+      console.log(`[DB] Successfully copied asset to: ${dbFile.uri}`);
 
-      // Log Name and Human-Readable Size
-      console.log('--- DB SEED STATS ---');
-      console.log(`File Name: ${dbFile.name}`);
-      console.log(`File Size: ${formatBytes(dbFile.size)}`);
-      console.log('---------------------');
-
-      // Safety check: A 100k product DB should likely be > 5MB.
-      // If it's only a few KB, the .NET backend might have sent an empty DB.
-      if (dbFile.size < 1024) {
-        console.warn("[DB] Warning: Downloaded file is suspiciously small.");
-      }
+      // RUN NATIVE INSPECTION
+      await inspectDatabase(DB_NAME);
 
     } catch (error: any) {
-      console.error("[DB] Initial seed failed:", error);
+      console.error("[DB] Prepopulation failed:", error);
       if (dbFile.exists) dbFile.delete();
-      throw new Error(`Failed to initialize data from server: ${error.message}`);
+      throw new Error(`Failed to initialize bundled data: ${error.message}`);
     }
-  } else {
-    // Log details even if it already exists for easier debugging
-    console.log(`[DB] Using existing database: ${dbFile.name} (${formatBytes(dbFile.size)})`);
   }
 
   // 2. Initialize WatermelonDB Adapter
   const adapter = new SQLiteAdapter({
     schema: mySchema,
-    dbName: 'watermelon',
-    jsi: true,
+    dbName: 'watermelon', // Appends .db automatically
+    jsi: true, // Recommended for performance [cite: 167, 200]
+    onSetUpError: (error) => {
+      console.error("WatermelonDB Setup Error:", error);
+    }
   });
 
   return new Database({
@@ -78,6 +93,7 @@ export const initDB = async () => {
   try {
     database = await setupDatabase();
   } catch (error) {
+    console.error("[initDB] critical error:", error);
     throw error;
   }
 };

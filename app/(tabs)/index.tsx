@@ -41,7 +41,7 @@ const ProductList = withObservables(['search'], ({ search }) => ({
     renderItem={({ item }) => (
       <View style={styles.card}>
         <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.skuText}>{item.sku} • ${item.price?.toFixed(2)}</Text>
+        <Text style={styles.skuText}>{item.sku} </Text>
       </View>
     )}
     ListEmptyComponent={

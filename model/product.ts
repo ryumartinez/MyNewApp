@@ -6,11 +6,7 @@ export default class Product extends Model {
   // @ts-ignore
   @field('name') name: string
   // @ts-ignore
-  @field('price') price: number
+  @field('price') price: string
   // @ts-ignore
   @field('sku') sku: string
-  // @ts-ignore
-  @readonly @date('created_at') createdAt: Date
-  // @ts-ignore
-  @readonly @date('updated_at') updatedAt: Date
 }
