@@ -14,7 +14,7 @@ export default function HomeScreen() {
       </Link>
 
       {/* Button for WatermelonDB */}
-      <Link href="/watermelon-test" asChild>
+      <Link href="/turbo-login-test" asChild>
         <Pressable style={[styles.button, styles.watermelonBtn]}>
           <Text style={styles.buttonText}>🍉 Test WatermelonDB</Text>
         </Pressable>
