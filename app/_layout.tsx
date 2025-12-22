@@ -5,6 +5,7 @@ import { database } from '@/database';
 import { View, ActivityIndicator } from 'react-native';
 // 1. Import the performance monitor
 import PerformanceStats from 'react-native-performance-stats';
+import PerformanceOverlay from "@/app/performance-overlay";
 
 export default function RootLayout() {
   const [dbReady, setDbReady] = useState(false);
@@ -55,7 +56,8 @@ export default function RootLayout() {
 
   return (
     <DatabaseProvider database={database}>
-      <Stack />
+      <Stack/>
+      <PerformanceOverlay />
     </DatabaseProvider>
   );
 }
