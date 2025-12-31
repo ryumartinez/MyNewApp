@@ -21,5 +21,16 @@ export const mySchema = appSchema({
         { name: 'is_required_batch_id', type: 'boolean' },
       ],
     }),
+    tableSchema({
+      name: 'product_batches',
+      columns: [
+        { name: 'data_area_id', type: 'string', isIndexed: true },
+        { name: 'item_number', type: 'string', isIndexed: true },
+        { name: 'batch_number', type: 'string', isIndexed: true },
+        { name: 'vendor_batch_number', type: 'string', isOptional: true },
+        { name: 'vendor_expiration_date', type: 'number', isOptional: true },
+        { name: 'batch_expiration_date', type: 'number', isOptional: true },
+      ],
+    }),
   ],
 });

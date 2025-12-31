@@ -3,6 +3,7 @@ import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 import Product from "@/database/product";
 import {mySchema} from "@/database/schema";
 import migrations from "@/database/migrations";
+import ProductBatch from "@/database/productBatch";
 
 // 1. Create the adapter
 const adapter = new SQLiteAdapter({
@@ -16,5 +17,5 @@ const adapter = new SQLiteAdapter({
 // This ensures that 'import { database }' is never undefined
 export const database = new Database({
   adapter,
-  modelClasses: [Product],
+  modelClasses: [Product, ProductBatch]
 });
