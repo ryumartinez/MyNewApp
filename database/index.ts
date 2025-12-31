@@ -11,6 +11,9 @@ const adapter = new SQLiteAdapter({
   migrations,
   jsi: true,            // High performance mode
   dbName: 'watermelon', // This creates 'watermelon.db'
+  onSetUpError: error => {
+    console.error(error);
+  }
 });
 
 // 2. Export the database instance directly

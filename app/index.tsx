@@ -39,6 +39,19 @@ export default function HomeScreen() {
             </View>
           </Pressable>
         </Link>
+
+        {/* --- Added Product Batches Button --- */}
+        <Link href="/product-batch-list" asChild>
+          <Pressable style={styles.button}>
+            <View style={[styles.iconCircle, { backgroundColor: '#E3F2FD' }]}>
+              <Text style={styles.buttonIcon}>🏷️</Text>
+            </View>
+            <View style={styles.buttonTextContainer}>
+              <Text style={styles.buttonTitle}>Product Batches</Text>
+              <Text style={styles.buttonDesc}>View batch expiration data</Text>
+            </View>
+          </Pressable>
+        </Link>
       </View>
 
       <View style={styles.footer}>
