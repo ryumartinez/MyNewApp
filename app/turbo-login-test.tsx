@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, Button } from 'react-native';
-import { Q } from '@nozbe/watermelondb'; // [cite: 1243]
+import { View, Text, ActivityIndicator, StyleSheet, Button, ScrollView } from 'react-native';
 import { pullAndPush } from "@/database/sync";
-import { database } from "@/database"; // Ensure this matches your index file [cite: 1215]
+import { database } from "@/database"; // [cite: 1215]
 
 const TurboLoginTest = () => {
   const [status, setStatus] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
+  const [metrics, setMetrics] = useState({ productCount: 0, batchCount: 0, time: 0 });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleTurboSync = async () => {
@@ -17,23 +17,32 @@ const TurboLoginTest = () => {
       await pullAndPush();
       const endTime = Date.now();
 
-      console.log(`Turbo Sync completed in ${endTime - startTime}ms`);
-
-      // --- Query and Log Products ---
-      // Use database.get() as a shortcut to access the collection [cite: 832]
+      // --- Access Collections ---
+      // Use database.get() as a shortcut for database.collections.get() [cite: 806, 2445]
       const productsCollection = database.get('products');
+      const batchesCollection = database.get('product_batches');
 
+      // --- Performance Optimized Logging (Raw Objects) ---
+      // unsafeFetchRaw() returns raw data, bypassing model instantiation overhead [cite: 1129, 1130]
       const rawProducts = await productsCollection.query().unsafeFetchRaw();
-      console.log(`Total rows in DB: ${rawProducts.length}`);
-      console.log('Sample Raw Product Data:', rawProducts[0]);
-      // Fetch all products or add Q.where for specific criteria [cite: 1232, 1235]
-      const allProducts = await productsCollection.query().fetch();
+      const rawBatches = await batchesCollection.query().unsafeFetchRaw();
 
-      console.log(`Total products after sync: ${allProducts.length}`);
-      if (allProducts.length > 0) {
-        // Log the first product to verify raw records match the Schema [cite: 1338]
-        console.log('Sample Product Data:', allProducts[0]._raw);
+      console.log(`[Sync Metrics] Total Products: ${rawProducts.length}`);
+      console.log(`[Sync Metrics] Total Batches: ${rawBatches.length}`);
+
+      if (rawBatches.length > 0) {
+        console.log('Sample Batch Raw Data:', rawBatches[0]); // Verify snake_case matches schema [cite: 1338]
       }
+
+      // --- Standard Model Fetching ---
+      const allProducts = await productsCollection.query().fetch();
+      const allBatches = await batchesCollection.query().fetch();
+
+      setMetrics({
+        productCount: allProducts.length,
+        batchCount: allBatches.length,
+        time: endTime - startTime,
+      });
 
       setStatus('done');
     } catch (e: any) {
@@ -48,20 +57,24 @@ const TurboLoginTest = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Turbo Login Test</Text>
 
       {status === 'syncing' && (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#FF6347" />
-          <Text style={styles.statusText}>Performing High-Speed Native Sync...</Text>
+          <Text style={styles.statusText}>Syncing Products & Batches...</Text>
         </View>
       )}
 
       {status === 'done' && (
         <View style={styles.center}>
-          <Text style={styles.successText}>✅ Turbo Sync Successful!</Text>
-          <Text style={styles.info}>Data processed directly via JSI bridge.</Text>
+          <Text style={styles.successText}>✅ Sync Successful!</Text>
+          <View style={styles.statsBox}>
+            <Text style={styles.info}>Time: {metrics.time}ms</Text>
+            <Text style={styles.info}>Products in DB: {metrics.productCount}</Text>
+            <Text style={styles.info}>Product Batches in DB: {metrics.batchCount}</Text>
+          </View>
           <Button title="Sync Again" onPress={handleTurboSync} />
         </View>
       )}
@@ -73,19 +86,20 @@ const TurboLoginTest = () => {
           <Button title="Retry" onPress={handleTurboSync} />
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  container: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   center: { alignItems: 'center' },
   title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
   statusText: { marginTop: 10, color: '#666' },
-  successText: { fontSize: 18, color: 'green', fontWeight: 'bold' },
+  successText: { fontSize: 18, color: 'green', fontWeight: 'bold', marginBottom: 10 },
+  statsBox: { backgroundColor: '#f0f0f0', padding: 15, borderRadius: 10, marginBottom: 20, width: '100%' },
   errorText: { fontSize: 18, color: 'red', fontWeight: 'bold' },
   errorDetail: { color: '#444', textAlign: 'center', marginVertical: 10 },
-  info: { marginVertical: 10, color: '#888', fontStyle: 'italic' }
+  info: { marginVertical: 5, color: '#333', fontSize: 16 }
 });
 
 export default TurboLoginTest;
