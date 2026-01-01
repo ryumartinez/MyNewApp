@@ -1,22 +1,18 @@
+//@ts-nocheck
+
 import { Model } from '@nozbe/watermelondb';
-import { field, text, date } from '@nozbe/watermelondb/decorators';
+import { field, text } from '@nozbe/watermelondb/decorators';
 
 export default class ProductBatch extends Model {
   static table = 'product_batches';
 
-  // @ts-ignore
   @text('data_area_id') dataAreaId!: string;
-  // @ts-ignore
   @text('item_number') itemNumber!: string;
-  // @ts-ignore
   @text('batch_number') batchNumber!: string;
 
-  // @ts-ignore
-  @text('vendor_batch_number') vendorBatchNumber?: string;
+  @text('vendor_batch_number') vendor_batch_number?: string | null;
 
-  // Stored as Unix timestamps (numbers) in your .NET backend
-  // @ts-ignore
-  @field('vendor_expiration_date') vendorExpirationDate?: number;
-  // @ts-ignore
-  @field('batch_expiration_date') batchExpirationDate?: number;
+  // Using @field because these are stored as long (numbers) in .NET
+  @field('vendor_expiration_date') vendor_expiration_date?: number | null;
+  @field('batch_expiration_date') batch_expiration_date?: number | null;
 }

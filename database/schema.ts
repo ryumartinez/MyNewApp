@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export const mySchema = appSchema({
-  version: 1, // Incremented version because columns changed
+  version: 1, // Increment this to trigger a migration or database reset
   tables: [
     tableSchema({
       name: 'products',
@@ -30,6 +30,8 @@ export const mySchema = appSchema({
         { name: 'vendor_batch_number', type: 'string', isOptional: true },
         { name: 'vendor_expiration_date', type: 'number', isOptional: true },
         { name: 'batch_expiration_date', type: 'number', isOptional: true },
+        // DO NOT add id, last_modified, _status, or _changed here.
+        // WatermelonDB adds those automatically.
       ],
     }),
   ],

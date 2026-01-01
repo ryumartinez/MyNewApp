@@ -12,10 +12,6 @@ import { useSyncManager } from '@/hooks/use-sync';
 export default function RootLayout() {
   const [dbReady, setDbReady] = useState(false);
 
-  // 3. Initialize the background sync manager
-  // This hook handles network listeners and periodic syncs automatically [cite: 1474]
-  useSyncManager();
-
   useEffect(() => {
     // Start performance monitoring
     PerformanceStats.start(true);
