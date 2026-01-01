@@ -3,20 +3,24 @@ import { Stack } from "expo-router";
 import { DatabaseProvider } from '@nozbe/watermelondb/react';
 import { database } from '@/database';
 import { View, ActivityIndicator } from 'react-native';
-// 1. Import the performance monitor
+// 1. Import performance monitoring tools
 import PerformanceStats from 'react-native-performance-stats';
 import PerformanceOverlay from "@/app/performance-overlay";
+// 2. Import the new unified sync manager hook
+import { useSyncManager } from '@/hooks/use-sync';
 
 export default function RootLayout() {
   const [dbReady, setDbReady] = useState(false);
 
+  // 3. Initialize the background sync manager
+  // This hook handles network listeners and periodic syncs automatically [cite: 1474]
+  useSyncManager();
+
   useEffect(() => {
-    // 2. Start monitoring (pass 'true' to include CPU usage tracking)
+    // Start performance monitoring
     PerformanceStats.start(true);
 
-    // 3. Set up a listener for real-time metrics
     const listener = PerformanceStats.addListener((stats) => {
-      // stats contains: fps, jsFps, cpu, ram
       if (__DEV__) {
         console.log(`[Performance] FPS: ${stats.uiFps.toFixed(1)} | JS FPS: ${stats.jsFps.toFixed(1)} | RAM: ${stats.usedRam}MB`);
       }
@@ -24,9 +28,8 @@ export default function RootLayout() {
 
     const initDb = async () => {
       try {
-        // Measure start time for DB init
         const start = Date.now();
-
+        // Check database readiness using a Reader to ensure consistency [cite: 1352, 1355]
         await database.read(async () => {
           const duration = Date.now() - start;
           console.log(`WatermelonDB ready in ${duration}ms`);
@@ -39,13 +42,13 @@ export default function RootLayout() {
 
     initDb();
 
-    // 4. Cleanup listener and stop monitoring on unmount
     return () => {
       listener.remove();
       PerformanceStats.stop();
     };
   }, []);
 
+  // Show a loading indicator while the database is initializing
   if (!dbReady) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', backgroundColor: '#fff' }}>
@@ -55,8 +58,9 @@ export default function RootLayout() {
   }
 
   return (
+    // DatabaseProvider allows all children to use reactive decorators like @field and @relation [cite: 2075]
     <DatabaseProvider database={database}>
-      <Stack/>
+      <Stack />
       <PerformanceOverlay />
     </DatabaseProvider>
   );
