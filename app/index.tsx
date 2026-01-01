@@ -4,7 +4,7 @@ import { Link } from 'expo-router';
 
 /**
  * HomeScreen for a reactive database benchmark app[cite: 8].
- * Features navigation to sync tests and product lists.
+ * Features navigation to sync tests, product lists, and creation tests.
  */
 export default function HomeScreen() {
   return (
@@ -23,7 +23,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.buttonTextContainer}>
               <Text style={styles.buttonTitle}>Turbo Login Test</Text>
-              <Text style={styles.buttonDesc}>Test initial sync speed</Text>
+              <Text style={styles.buttonDesc}>Test initial sync speed [cite: 1538]</Text>
             </View>
           </Pressable>
         </Link>
@@ -35,12 +35,11 @@ export default function HomeScreen() {
             </View>
             <View style={styles.buttonTextContainer}>
               <Text style={styles.buttonTitle}>Product List</Text>
-              <Text style={styles.buttonDesc}>View reactive collections</Text>
+              <Text style={styles.buttonDesc}>View reactive collections [cite: 37]</Text>
             </View>
           </Pressable>
         </Link>
 
-        {/* --- Added Product Batches Button --- */}
         <Link href="/product-batch-list" asChild>
           <Pressable style={styles.button}>
             <View style={[styles.iconCircle, { backgroundColor: '#E3F2FD' }]}>
@@ -49,6 +48,19 @@ export default function HomeScreen() {
             <View style={styles.buttonTextContainer}>
               <Text style={styles.buttonTitle}>Product Batches</Text>
               <Text style={styles.buttonDesc}>View batch expiration data</Text>
+            </View>
+          </Pressable>
+        </Link>
+
+        {/* --- Added Product Create Button --- */}
+        <Link href="/product-create" asChild>
+          <Pressable style={styles.button}>
+            <View style={[styles.iconCircle, { backgroundColor: '#FFF9C4' }]}>
+              <Text style={styles.buttonIcon}>➕</Text>
+            </View>
+            <View style={styles.buttonTextContainer}>
+              <Text style={styles.buttonTitle}>Create Product</Text>
+              <Text style={styles.buttonDesc}>Test Writer modification flow [cite: 820]</Text>
             </View>
           </Pressable>
         </Link>
