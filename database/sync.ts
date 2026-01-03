@@ -1,57 +1,85 @@
 import { synchronize, SyncPullArgs, SyncPushArgs } from '@nozbe/watermelondb/sync';
-// Use the built-in SyncLogger for structured diagnostics [cite: 1608]
 import SyncLogger from '@nozbe/watermelondb/sync/SyncLogger';
+import axios from 'axios';
 import { database } from './index';
 
+export const api = axios.create({
+  baseURL: 'https://dev.azeta.com.py/api/big/sync',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Variable to store the interceptor ID so we can clear it if the token changes
+let interceptorId: number | null = null;
+
+export const setAuthToken = (token: string) => {
+  // Clear existing interceptor if it exists
+  if (interceptorId !== null) {
+    api.interceptors.request.eject(interceptorId);
+  }
+
+  if (token) {
+    interceptorId = api.interceptors.request.use((config) => {
+      config.headers.Authorization = `Bearer ${token}`;
+      return config;
+    });
+  }
+};
+
 export async function pullAndPush(): Promise<void> {
-  // Initialize logger with a limit of 10 logs kept in memory [cite: 1608]
   const logger = new SyncLogger(10);
 
   try {
     await synchronize({
       database,
-      // Pass a new log instance to be populated by the sync process [cite: 1609]
       log: logger.newLog(),
       pullChanges: async ({ lastPulledAt, schemaVersion, migration }: SyncPullArgs) => {
         const isFirstSync = lastPulledAt === null || lastPulledAt === 0;
-        const url = `http://10.0.2.2:5117/api/sync/pull?last_pulled_at=${lastPulledAt ?? 0}&turbo=${isFirstSync}`;
 
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(await response.text());
+        // Axios uses 'params' for query strings
+        const response = await api.get('/pull', {
+          params: {
+            last_pulled_at: lastPulledAt ?? 0,
+            turbo: isFirstSync,
+          },
+          // If it's the first sync, we want the raw string for Turbo Mode
+          responseType: isFirstSync ? 'text' : 'json',
+        });
 
         if (isFirstSync) {
-          const json = await response.text();
-          return { syncJson: json };
+          // response.data will be the raw string because of responseType: 'text'
+          return { syncJson: response.data };
         } else {
-          const { changes, timestamp } = await response.json();
+          const { changes, timestamp } = response.data;
 
           if (__DEV__ && changes.products) {
             const all = [...changes.products.created, ...changes.products.updated];
-            all.forEach((r, i) => { if (!r.id) console.error(`Product ${i} missing ID!`, r); });
+            all.forEach((r, i) => {
+              if (!r.id) console.error(`Product ${i} missing ID!`, r);
+            });
           }
 
           return { changes, timestamp };
         }
       },
       pushChanges: async ({ changes, lastPulledAt }: SyncPushArgs) => {
-        const response = await fetch(`http://10.0.2.2:5117/api/sync/push`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ changes, last_pulled_at: lastPulledAt }),
+        // Axios automatically stringifies the body
+        await api.post('/push', {
+          changes,
+          last_pulled_at: lastPulledAt,
         });
-
-        if (!response.ok) throw new Error(await response.text());
       },
-      migrationsEnabledAtVersion: 1, // Required if using migrations [cite: 1517]
+      migrationsEnabledAtVersion: 1,
       unsafeTurbo: true,
       sendCreatedAsUpdated: true,
     });
 
-    // Log the results after a successful sync
     console.log('Sync successful. Diagnostics:', logger.formattedLogs);
-  } catch (error) {
-    // Log the results even if it fails to see where it broke
-    console.error('Sync failed:', error);
+  } catch (error: any) {
+    // Axios errors contain more detail in the 'response' object
+    const errorMessage = error.response?.data || error.message;
+    console.error('Sync failed:', errorMessage);
     console.log('Failure Diagnostics:', logger.formattedLogs);
   }
 }

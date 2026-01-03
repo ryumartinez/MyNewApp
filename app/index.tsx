@@ -16,6 +16,18 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.buttonContainer}>
+        <Link href="/auth" asChild>
+          <Pressable style={styles.button}>
+            <View style={[styles.iconCircle, { backgroundColor: '#FFEDEB' }]}>
+              <Text style={styles.buttonIcon}>⚡</Text>
+            </View>
+            <View style={styles.buttonTextContainer}>
+              <Text style={styles.buttonTitle}>Auth</Text>
+            </View>
+          </Pressable>
+        </Link>
+
+
         <Link href="/turbo-login-test" asChild>
           <Pressable style={styles.button}>
             <View style={[styles.iconCircle, { backgroundColor: '#FFEDEB' }]}>
