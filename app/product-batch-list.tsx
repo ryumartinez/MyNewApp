@@ -35,18 +35,6 @@ const BatchRow: React.FC<BatchRowProps> = ({ batch }) => {
           <Text style={styles.badgeText}>{batch.dataAreaId}</Text>
         </View>
       </View>
-
-      <Text style={styles.details}>
-        Item No: {batch.itemNumber} | Vendor: {batch.vendorBatchNumber || 'N/A'}
-      </Text>
-
-      <View style={styles.dateContainer}>
-        <Text style={styles.dateLabel}>EXP:</Text>
-        <Text style={styles.dateValue}>{formatDate(batch.batchExpirationDate)}</Text>
-
-        <Text style={[styles.dateLabel, { marginLeft: 12 }]}>V.EXP:</Text>
-        <Text style={styles.dateValue}>{formatDate(batch.vendorExpirationDate)}</Text>
-      </View>
     </View>
   );
 };
