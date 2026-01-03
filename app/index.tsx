@@ -35,7 +35,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.buttonTextContainer}>
               <Text style={styles.buttonTitle}>Turbo Login Test</Text>
-              <Text style={styles.buttonDesc}>Test initial sync speed [cite: 1538]</Text>
+              <Text style={styles.buttonDesc}>Test initial sync speed</Text>
             </View>
           </Pressable>
         </Link>
@@ -47,7 +47,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.buttonTextContainer}>
               <Text style={styles.buttonTitle}>Product List</Text>
-              <Text style={styles.buttonDesc}>View reactive collections [cite: 37]</Text>
+              <Text style={styles.buttonDesc}>View reactive collections</Text>
             </View>
           </Pressable>
         </Link>
@@ -72,14 +72,10 @@ export default function HomeScreen() {
             </View>
             <View style={styles.buttonTextContainer}>
               <Text style={styles.buttonTitle}>Create Product</Text>
-              <Text style={styles.buttonDesc}>Test Writer modification flow [cite: 820]</Text>
+              <Text style={styles.buttonDesc}>Test Writer modification flow </Text>
             </View>
           </Pressable>
         </Link>
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Powered by WatermelonDB [cite: 12]</Text>
       </View>
     </View>
   );
